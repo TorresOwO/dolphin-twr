@@ -16293,3 +16293,24 @@ msgstr "Hilfe"
 #: qtbase/src/gui/kernel/qplatformtheme.cpp:742
 msgid "Restore Defaults"
 msgstr "Standard wiederherstellen"
+
+#: Source/Core/DolphinQt/Settings/GeneralPane.cpp:257
+msgid "Enable Local HTTP Server"
+msgstr "Lokalen HTTP-Server aktivieren"
+
+#: Source/Core/DolphinQt/Settings/GeneralPane.cpp:260
+msgid ""
+"Runs an embedded local HTTP server during emulation to interact with Dolphin "
+"over the local network."
+msgstr ""
+"Führt während der Emulation einen eingebetteten lokalen HTTP-Server aus, um "
+"über das lokale Netzwerk mit Dolphin zu interagieren."
+
+#: Source/Core/DolphinQt/Settings/GeneralPane.cpp:265
+msgid "HTTP Server Port:"
+msgstr "HTTP-Server-Port:"
+
+#: Source/Core/DolphinQt/Settings/GeneralPane.cpp:267
+msgid "Specifies the TCP port the HTTP server listens on (default: 9090)."
+msgstr ""
+"Gibt den TCP-Port an, auf dem der HTTP-Server lauscht (Standard: 9090)."
