@@ -21,6 +21,7 @@
 #include "Core/System.h"
 
 #include "DolphinQt/Config/ConfigControls/ConfigBool.h"
+#include "DolphinQt/Config/ConfigControls/ConfigInteger.h"
 #include "DolphinQt/Config/ToolTipControls/ToolTipCheckBox.h"
 #include "DolphinQt/Config/ToolTipControls/ToolTipComboBox.h"
 #include "DolphinQt/Config/ToolTipControls/ToolTipPushButton.h"
@@ -79,6 +80,8 @@ void GeneralPane::CreateLayout()
   CreateAnalytics();
 #endif
 
+  CreateNetwork();
+
   m_main_layout->addStretch(1);
   setLayout(m_main_layout);
 }
@@ -91,6 +94,8 @@ void GeneralPane::OnEmulationStateChanged(Core::State state)
   m_checkbox_cheats->setEnabled(!running);
   m_checkbox_load_games_into_memory->setEnabled(!running);
   m_checkbox_override_region_settings->setEnabled(!running);
+  m_checkbox_http_server->setEnabled(!running);
+  m_spinbox_http_server_port->setEnabled(!running);
 #ifdef USE_DISCORD_PRESENCE
   m_checkbox_discord_presence->setEnabled(!running);
 #endif
@@ -246,6 +251,30 @@ void GeneralPane::CreateAnalytics()
   analytics_group_layout->addWidget(m_button_generate_new_identity);
 }
 #endif
+
+void GeneralPane::CreateNetwork()
+{
+  auto* network_group = new QGroupBox(tr("Network"));
+  auto* network_layout = new QFormLayout;
+  network_group->setLayout(network_layout);
+  m_main_layout->addWidget(network_group);
+
+  network_layout->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+  network_layout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+
+  m_checkbox_http_server =
+      new ConfigBool(tr("Enable Local HTTP Server"), Config::MAIN_HTTP_SERVER_ENABLE);
+  m_checkbox_http_server->SetDescription(
+      tr("Runs an embedded local HTTP server during emulation to interact with Dolphin over the "
+         "local network."));
+  network_layout->addRow(m_checkbox_http_server);
+
+  m_spinbox_http_server_port = new ConfigInteger(1024, 65535, Config::MAIN_HTTP_SERVER_PORT);
+  auto* port_label = new ConfigIntegerLabel(tr("HTTP Server Port:"), m_spinbox_http_server_port);
+  m_spinbox_http_server_port->SetDescription(
+      tr("Specifies the TCP port the HTTP server listens on (default: 9090)."));
+  network_layout->addRow(port_label, m_spinbox_http_server_port);
+}
 
 void GeneralPane::LoadConfig()
 {

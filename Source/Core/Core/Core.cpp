@@ -581,7 +581,11 @@ static void EmuThread(Core::System& system, std::unique_ptr<BootParameters> boot
   AudioCommon::InitSoundStream(system);
   Common::ScopeGuard audio_guard([&system] { AudioCommon::ShutdownSoundStream(system); });
 
-  system.GetHTTPServer().Start(system, 9090);
+  if (Config::Get(Config::MAIN_HTTP_SERVER_ENABLE))
+  {
+    const u16 port = static_cast<u16>(Config::Get(Config::MAIN_HTTP_SERVER_PORT));
+    system.GetHTTPServer().Start(system, port);
+  }
   Common::ScopeGuard http_server_guard([&system] { system.GetHTTPServer().Stop(); });
 
   HW::Init(system,

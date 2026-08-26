@@ -6,6 +6,7 @@
 #include <QWidget>
 
 class ConfigBool;
+class ConfigInteger;
 class QCheckBox;
 class QComboBox;
 class QLabel;
@@ -34,6 +35,7 @@ private:
   void CreateBasic();
   void CreateAutoUpdate();
   void CreateFallbackRegion();
+  void CreateNetwork();
   void AddDescriptions();
 
   void LoadConfig();
@@ -51,6 +53,8 @@ private:
   ConfigBool* m_checkbox_load_games_into_memory;
   ConfigBool* m_checkbox_override_region_settings;
   ConfigBool* m_checkbox_auto_disc_change;
+  ConfigBool* m_checkbox_http_server;
+  ConfigInteger* m_spinbox_http_server_port;
 #ifdef USE_DISCORD_PRESENCE
   ToolTipCheckBox* m_checkbox_discord_presence;
 #endif

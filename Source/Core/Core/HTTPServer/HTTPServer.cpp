@@ -298,7 +298,7 @@ void HTTPServer::HandleClient(uintptr_t client_socket)
 {
   SOCKET client_fd = static_cast<SOCKET>(client_socket);
   std::array<char, 4096> buffer{};
-  const ssize_t bytes_read = recv(client_fd, buffer.data(), static_cast<int>(buffer.size() - 1), 0);
+  const int bytes_read = recv(client_fd, buffer.data(), static_cast<int>(buffer.size() - 1), 0);
 
   if (bytes_read <= 0)
   {

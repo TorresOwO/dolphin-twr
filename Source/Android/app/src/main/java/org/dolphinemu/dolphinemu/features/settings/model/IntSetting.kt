@@ -82,6 +82,12 @@ enum class IntSetting(
         "DoubleTapButton",
         NativeLibrary.ButtonType.WIIMOTE_BUTTON_A
     ),
+    MAIN_HTTP_SERVER_PORT(
+        Settings.FILE_DOLPHIN,
+        Settings.SECTION_INI_NETWORK,
+        "HTTPServerPort",
+        9090
+    ),
     SYSCONF_LANGUAGE(Settings.FILE_SYSCONF, "IPL", "LNG", 0x01),
     SYSCONF_SOUND_MODE(Settings.FILE_SYSCONF, "IPL", "SND", 0x01),
     SYSCONF_SENSOR_BAR_POSITION(Settings.FILE_SYSCONF, "BT", "BAR", 0x01),
@@ -223,7 +229,8 @@ enum class IntSetting(
             MAIN_SLOT_A,
             MAIN_SLOT_B,
             MAIN_SERIAL_PORT_1,
-            MAIN_FALLBACK_REGION
+            MAIN_FALLBACK_REGION,
+            MAIN_HTTP_SERVER_PORT
         )
 
         private val NOT_RUNTIME_EDITABLE: Set<IntSetting> =
