@@ -948,6 +948,11 @@ It can efficiently compress both junk data and encrypted Wii data.
 
     <!-- Emulated USB Devices -->
     <string name="emulated_usb_devices">Emulated USB Devices</string>
+    <string name="http_server_enable">Enable Local HTTP Server</string>
+    <string name="http_server_enable_description">Runs an embedded local HTTP server during emulation to interact with peripheral devices and web interfaces over Wi-Fi.</string>
+    <string name="http_server_port">HTTP Server Port</string>
+    <string name="http_server_port_description">Port used by the embedded HTTP server (default: 9090).</string>
+    <string name="http_server_started">Dolphin Web Server running at %1$s</string>
     <string name="emulate_skylander_portal">Skylanders Portal</string>
     <string name="skylanders_manager">Skylanders Manager</string>
     <string name="create_skylander_title">Create Skylander</string>

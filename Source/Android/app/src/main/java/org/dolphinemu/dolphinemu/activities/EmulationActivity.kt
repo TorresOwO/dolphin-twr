@@ -28,6 +28,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.slider.Slider
@@ -36,6 +37,8 @@ import org.dolphinemu.dolphinemu.R
 import org.dolphinemu.dolphinemu.databinding.ActivityEmulationBinding
 import org.dolphinemu.dolphinemu.databinding.DialogInputAdjustBinding
 import org.dolphinemu.dolphinemu.databinding.DialogNfcFiguresManagerBinding
+import org.dolphinemu.dolphinemu.features.httpserver.DolphinHttpServer
+import org.dolphinemu.dolphinemu.utils.Log
 import org.dolphinemu.dolphinemu.features.infinitybase.InfinityConfig
 import org.dolphinemu.dolphinemu.features.infinitybase.model.Figure
 import org.dolphinemu.dolphinemu.features.infinitybase.ui.FigureSlot
@@ -88,6 +91,8 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
     private var infinityPosition = -1
     private lateinit var skylandersBinding: DialogNfcFiguresManagerBinding
     private lateinit var infinityBinding: DialogNfcFiguresManagerBinding
+    var httpServer: DolphinHttpServer? = null
+        private set
 
     private lateinit var binding: ActivityEmulationBinding
 
@@ -332,14 +337,41 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
             emulationFragment?.refreshInputOverlay()
 
             updateDisplaySettings()
+
+            startHttpServerIfNeeded()
         } catch (_: IllegalStateException) {
             // Most likely the core delivered an onTitleChanged while emulation was shutting down.
             // Let's just ignore it, since we're about to shut down anyway.
         }
     }
 
+    private fun startHttpServerIfNeeded() {
+        try {
+            val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+            val enabled = prefs.getBoolean("http_server_enable", true)
+            if (enabled && httpServer == null) {
+                val port = prefs.getString("http_server_port", "9090")?.toIntOrNull() ?: 9090
+                val server = DolphinHttpServer(this, port)
+                server.start()
+                httpServer = server
+                val ip = DolphinHttpServer.getLocalIpAddress() ?: "127.0.0.1"
+                Toast.makeText(
+                    this,
+                    getString(R.string.http_server_started, "http://$ip:$port"),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        } catch (e: Exception) {
+            Log.error("Error starting DolphinHttpServer: ${e.message}")
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            httpServer?.stop()
+            httpServer = null
+        } catch (_: Exception) {}
         settings.close()
     }
 

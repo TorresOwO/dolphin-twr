@@ -45,6 +45,8 @@ import org.dolphinemu.dolphinemu.features.settings.model.IntSetting
 import org.dolphinemu.dolphinemu.features.settings.model.PostProcessing
 import org.dolphinemu.dolphinemu.features.settings.model.ScaledIntSetting
 import org.dolphinemu.dolphinemu.features.settings.model.Settings
+import org.dolphinemu.dolphinemu.features.settings.model.SharedPreferencesBooleanSetting
+import org.dolphinemu.dolphinemu.features.settings.model.SharedPreferencesStringSetting
 import org.dolphinemu.dolphinemu.features.settings.model.StringSetting
 import org.dolphinemu.dolphinemu.features.settings.model.view.DateTimeChoiceSetting
 import org.dolphinemu.dolphinemu.features.settings.model.view.DirectoryPicker
@@ -1054,6 +1056,22 @@ class SettingsFragmentPresenter(
         )
 
         sl.add(HeaderSetting(context, R.string.emulated_usb_devices, 0))
+        sl.add(
+            SwitchSetting(
+                context,
+                SharedPreferencesBooleanSetting(context, "http_server_enable", true),
+                R.string.http_server_enable,
+                R.string.http_server_enable_description
+            )
+        )
+        sl.add(
+            InputStringSetting(
+                context,
+                SharedPreferencesStringSetting(context, "http_server_port", "9090"),
+                R.string.http_server_port,
+                R.string.http_server_port_description
+            )
+        )
         sl.add(
             SwitchSetting(
                 context,
