@@ -137,6 +137,8 @@ add_library(core
   HLE/HLE.cpp
   HLE/HLE.h
   Host.h
+  HTTPServer/HTTPServer.cpp
+  HTTPServer/HTTPServer.h
   HotkeyManager.cpp
   HotkeyManager.h
   HW/AddressSpace.cpp
