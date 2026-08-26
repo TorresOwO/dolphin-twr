@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skylanders Portal - Dolphin Web</title>
+  <link rel="stylesheet" href="/skylanders/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-left">
+        <a href="/" class="back-link">&larr; Web Hub</a>
+        <div>
+          <h1>Portal of Power</h1>
+          <p class="subtitle">Real-time Virtual Skylanders Management</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="portalStatusBadge" class="status-badge">Connecting...</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Portal Active Slots -->
+      <section class="section">
+        <div class="section-header">
+          <h2>Active Portal Figures</h2>
+          <button id="btnRefresh" class="btn-secondary">Refresh</button>
+        </div>
+        <div id="portalSlotsGrid" class="slots-grid">
+          <div class="loading-state">Loading portal slots...</div>
+        </div>
+      </section>
+
+      <!-- Figure Catalog / Quick Place -->
+      <section class="section">
+        <h2>Place Figure on Portal</h2>
+        <div class="card action-card">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="slotSelect">Target Slot:</label>
+              <select id="slotSelect" class="form-control">
+                <option value="0">Slot 1</option>
+                <option value="1">Slot 2</option>
+                <option value="2">Slot 3</option>
+                <option value="3">Slot 4</option>
+                <option value="4">Slot 5</option>
+                <option value="5">Slot 6</option>
+                <option value="6">Slot 7</option>
+                <option value="7">Slot 8</option>
+              </select>
+            </div>
+            <div class="form-group flex-3">
+              <label for="searchInput">Search Figure:</label>
+              <input type="text" id="searchInput" class="form-control" placeholder="Type figure name (e.g. Spyro, Gill Grunt, Tree Rex)..." autocomplete="off">
+            </div>
+          </div>
+
+          <div id="catalogList" class="catalog-results"></div>
+        </div>
+      </section>
+
+      <!-- Upload Custom Figure File -->
+      <section class="section">
+        <h2>Upload .sky Figure File</h2>
+        <div class="card action-card upload-box">
+          <p>Select a <code>.sky</code> binary dump from your PC to upload and place on the portal.</p>
+          <div class="upload-controls">
+            <input type="file" id="skyFileInput" accept=".sky" class="file-input">
+            <button id="btnUpload" class="btn-primary">Upload & Place</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Dolphin Emulator &bull; Skylanders Portal Web Interface</p>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/skylanders/app.js"></script>
+</body>
+</html>

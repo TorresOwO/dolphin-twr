@@ -52,6 +52,7 @@ import org.dolphinemu.dolphinemu.features.settings.model.StringSetting
 import org.dolphinemu.dolphinemu.features.settings.ui.MenuTag
 import org.dolphinemu.dolphinemu.features.settings.ui.SettingsActivity
 import org.dolphinemu.dolphinemu.features.skylanders.SkylanderConfig
+import org.dolphinemu.dolphinemu.features.skylanders.server.SkylanderHttpModule
 import org.dolphinemu.dolphinemu.features.skylanders.model.Skylander
 import org.dolphinemu.dolphinemu.features.skylanders.ui.SkylanderSlot
 import org.dolphinemu.dolphinemu.features.skylanders.ui.SkylanderSlotAdapter
@@ -352,6 +353,21 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
             if (enabled && httpServer == null) {
                 val port = prefs.getString("http_server_port", "9090")?.toIntOrNull() ?: 9090
                 val server = DolphinHttpServer(this, port)
+                
+                // Register Skylanders module
+                server.registerModule(
+                    SkylanderHttpModule(
+                        context = this,
+                        slotListSupplier = { skylanderSlots },
+                        onSlotUpdated = { slotIndex, portalSlot, name ->
+                            updateSkylanderSlotFromExternal(slotIndex, portalSlot, name)
+                        },
+                        onSlotCleared = { slotIndex ->
+                            clearSkylander(slotIndex)
+                        }
+                    )
+                )
+
                 server.start()
                 httpServer = server
                 val ip = DolphinHttpServer.getLocalIpAddress() ?: "127.0.0.1"
@@ -951,8 +967,23 @@ class EmulationActivity : AppCompatActivity(), ThemeProvider {
     }
 
     fun clearSkylander(slot: Int) {
-        skylanderSlots[slot].label = getString(R.string.skylander_slot, slot + 1)
-        skylandersBinding.figureManager.adapter?.notifyItemChanged(slot)
+        if (slot in 0 until skylanderSlots.size) {
+            skylanderSlots[slot].portalSlot = -1
+            skylanderSlots[slot].label = getString(R.string.skylander_slot, slot + 1)
+            if (::skylandersBinding.isInitialized) {
+                skylandersBinding.figureManager.adapter?.notifyItemChanged(slot)
+            }
+        }
+    }
+
+    fun updateSkylanderSlotFromExternal(slotIndex: Int, portalSlot: Int, name: String) {
+        if (slotIndex in 0 until skylanderSlots.size) {
+            skylanderSlots[slotIndex].portalSlot = portalSlot
+            skylanderSlots[slotIndex].label = name
+            if (::skylandersBinding.isInitialized) {
+                skylandersBinding.figureManager.adapter?.notifyItemChanged(slotIndex)
+            }
+        }
     }
 
     fun setInfinityFigureData(num: Long, name: String, position: Int, listPosition: Int) {
