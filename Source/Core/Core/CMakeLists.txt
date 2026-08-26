@@ -139,6 +139,7 @@ add_library(core
   Host.h
   HTTPServer/HTTPServer.cpp
   HTTPServer/HTTPServer.h
+  HTTPServer/WebDashboard.h
   HotkeyManager.cpp
   HotkeyManager.h
   HW/AddressSpace.cpp

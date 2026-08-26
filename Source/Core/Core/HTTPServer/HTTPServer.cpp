@@ -3,14 +3,14 @@
 
 #include "Core/HTTPServer/HTTPServer.h"
 
+#include <array>
 #include <cstring>
 #include <sstream>
-#include <vector>
+#include <string_view>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-typedef SSIZE_T ssize_t;
 #define CLOSE_SOCKET closesocket
 #else
 #include <arpa/inet.h>
@@ -23,7 +23,15 @@ typedef SSIZE_T ssize_t;
 typedef int SOCKET;
 #endif
 
+#include <fmt/format.h>
+
 #include "Common/Logging/Log.h"
+#include "Core/Config/MainSettings.h"
+#include "Core/ConfigManager.h"
+#include "Core/Core.h"
+#include "Core/HTTPServer/WebDashboard.h"
+#include "Core/System.h"
+#include "VideoCommon/PerformanceMetrics.h"
 
 namespace Core
 {
@@ -36,13 +44,13 @@ SOCKET CreateServerSocket(u16 port)
   SOCKET server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd == INVALID_SOCKET)
   {
-    ERROR_LOG_FMT(CORE, "HTTPServer: Failed to create socket TCP");
+    ERROR_LOG_FMT(CORE, "HTTPServer: Failed to create TCP socket");
     return INVALID_SOCKET;
   }
 
   int opt = 1;
 #ifdef _WIN32
-  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<const char*>(&opt), sizeof(opt));
 #else
   setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 #endif
@@ -52,7 +60,8 @@ SOCKET CreateServerSocket(u16 port)
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
 
-  if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) == SOCKET_ERROR ||
+  if (bind(server_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) ==
+          SOCKET_ERROR ||
       listen(server_fd, 10) == SOCKET_ERROR)
   {
     CLOSE_SOCKET(server_fd);
@@ -69,14 +78,14 @@ HTTPRequest ParseRequest(std::string_view raw_request)
   std::string http_version;
   stream >> request.method >> request.path >> http_version;
 
-  size_t query_pos = request.path.find('?');
+  const size_t query_pos = request.path.find('?');
   if (query_pos != std::string::npos)
     request.path = request.path.substr(0, query_pos);
 
   return request;
 }
 
-std::string GetStatusText(int status_code)
+std::string_view GetStatusText(int status_code)
 {
   switch (status_code)
   {
@@ -94,21 +103,40 @@ std::string GetStatusText(int status_code)
     return "Unknown Status";
   }
 }
+
 std::string FormatResponse(const HTTPResponse& res)
 {
-  std::ostringstream response_stream;
-  std::string status_text = GetStatusText(res.status_code);
-  response_stream << "HTTP/1.1 " << res.status_code << " " << status_text << "\r\n"
-                  << "Content-Type: " << res.content_type << "\r\n"
-                  << "Content-Length: " << res.body.size() << "\r\n"
-                  << "Access-Control-Allow-Origin: *\r\n"
-                  << "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
-                  << "Access-Control-Allow-Headers: Content-Type\r\n"
-                  << "Connection: close\r\n\r\n"
-                  << res.body;
-
-  return response_stream.str();
+  return fmt::format(
+      "HTTP/1.1 {} {}\r\n"
+      "Content-Type: {}\r\n"
+      "Content-Length: {}\r\n"
+      "Access-Control-Allow-Origin: *\r\n"
+      "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+      "Access-Control-Allow-Headers: Content-Type\r\n"
+      "Connection: close\r\n\r\n"
+      "{}",
+      res.status_code, GetStatusText(res.status_code), res.content_type, res.body.size(),
+      res.body);
 }
+
+std::string_view StateToString(Core::State state)
+{
+  switch (state)
+  {
+  case State::Running:
+    return "Running";
+  case State::Paused:
+    return "Paused";
+  case State::Starting:
+    return "Starting";
+  case State::Stopping:
+    return "Stopping";
+  case State::Uninitialized:
+  default:
+    return "Uninitialized";
+  }
+}
+
 }  // namespace
 
 HTTPServer::HTTPServer() = default;
@@ -118,7 +146,7 @@ HTTPServer::~HTTPServer()
   Stop();
 }
 
-bool HTTPServer::Start(u16 port)
+bool HTTPServer::Start(Core::System& system, u16 port)
 {
   if (m_is_running)
     return true;
@@ -129,16 +157,17 @@ bool HTTPServer::Start(u16 port)
   SOCKET server_fd = CreateServerSocket(m_port);
   if (server_fd == INVALID_SOCKET)
   {
-    ERROR_LOG_FMT(COMMON, "HTTPServer: Failed to create server socket on port {}", port);
+    ERROR_LOG_FMT(CORE, "HTTPServer: Failed to create server socket on port {}", port);
     m_socket_context.reset();
     return false;
   }
 
-  m_server_socket = (uintptr_t)server_fd;
+  m_server_socket = static_cast<uintptr_t>(server_fd);
   m_is_running = true;
 
-  INFO_LOG_FMT(CORE, "HTTPServer: Listening on port {}", m_port);
+  RegisterDefaultRoutes(system);
 
+  INFO_LOG_FMT(CORE, "HTTPServer: Listening on port {}", m_port);
   m_server_thread = std::make_unique<std::thread>(&HTTPServer::ServerLoop, this);
   return true;
 }
@@ -152,7 +181,7 @@ void HTTPServer::Stop()
 
   if (m_server_socket != 0)
   {
-    CLOSE_SOCKET((SOCKET)m_server_socket);
+    CLOSE_SOCKET(static_cast<SOCKET>(m_server_socket));
     m_server_socket = 0;
   }
 
@@ -162,15 +191,87 @@ void HTTPServer::Stop()
     m_server_thread.reset();
   }
 
+  m_handlers.clear();
+  m_routes.clear();
   m_socket_context.reset();
   INFO_LOG_FMT(CORE, "HTTPServer: Stopped");
 }
 
 void HTTPServer::RegisterHandler(const std::string& method, const std::string& path,
-                                 HTTPHandler handler)
+                                 HTTPHandler handler, const std::string& description)
 {
-  std::string key = method + " " + path;
+  const std::string key = method + " " + path;
   m_handlers[key] = std::move(handler);
+  m_routes.push_back({method, path, description});
+}
+
+void HTTPServer::RegisterDefaultRoutes(Core::System& system)
+{
+  RegisterHandler(
+      "GET", "/api/status",
+      [&system](const HTTPRequest&) -> HTTPResponse {
+        const auto state = Core::GetState(system);
+        const std::string game_id = SConfig::GetInstance().GetGameID();
+        const std::string game_title = SConfig::GetInstance().GetTitleName();
+        const double fps = system.GetPerfMetrics().GetFPS();
+        const double speed = system.GetPerfMetrics().GetSpeed() * 100.0;
+
+        const std::string json = fmt::format(
+            "{{"
+            "\"success\":true,"
+            "\"state\":\"{}\","
+            "\"game_id\":\"{}\","
+            "\"game_title\":\"{}\","
+            "\"fps\":{:.1f},"
+            "\"speed_percent\":{:.1f}"
+            "}}",
+            StateToString(state), game_id, game_title, fps, speed);
+
+        return HTTPResponse{200, "application/json; charset=utf-8", json};
+      },
+      "Returns the current emulation status and game information");
+
+  RegisterHandler(
+      "POST", "/api/pause",
+      [&system](const HTTPRequest&) -> HTTPResponse {
+        Core::SetState(system, State::Paused);
+        return HTTPResponse{200, "application/json; charset=utf-8",
+                            "{\"success\":true,\"state\":\"Paused\"}"};
+      },
+      "Pauses emulation");
+
+  RegisterHandler(
+      "POST", "/api/resume",
+      [&system](const HTTPRequest&) -> HTTPResponse {
+        Core::SetState(system, State::Running);
+        return HTTPResponse{200, "application/json; charset=utf-8",
+                            "{\"success\":true,\"state\":\"Running\"}"};
+      },
+      "Resumes emulation");
+
+  RegisterHandler(
+      "GET", "/api/routes",
+      [this](const HTTPRequest&) -> HTTPResponse {
+        std::string json = "{\"success\":true,\"routes\":[";
+        for (size_t i = 0; i < m_routes.size(); ++i)
+        {
+          if (i > 0)
+            json += ",";
+          json += fmt::format(
+              "{{\"method\":\"{}\",\"path\":\"{}\",\"description\":\"{}\"}}",
+              m_routes[i].method, m_routes[i].path, m_routes[i].description);
+        }
+        json += "]}";
+        return HTTPResponse{200, "application/json; charset=utf-8", json};
+      },
+      "Lists all registered HTTP endpoints");
+
+  RegisterHandler(
+      "GET", "/",
+      [](const HTTPRequest&) -> HTTPResponse {
+        return HTTPResponse{200, "text/html; charset=utf-8", std::string(DASHBOARD_HTML)};
+      },
+      "Interactive web dashboard showing emulator status and endpoints");
 }
 
 void HTTPServer::ServerLoop()
@@ -179,8 +280,9 @@ void HTTPServer::ServerLoop()
   {
     sockaddr_in client_address{};
     socklen_t client_address_len = sizeof(client_address);
-    SOCKET client_fd =
-        accept((SOCKET)m_server_socket, (struct sockaddr*)&client_address, &client_address_len);
+    SOCKET client_fd = accept(static_cast<SOCKET>(m_server_socket),
+                              reinterpret_cast<struct sockaddr*>(&client_address),
+                              &client_address_len);
     if (client_fd == INVALID_SOCKET)
     {
       if (!m_is_running)
@@ -188,15 +290,15 @@ void HTTPServer::ServerLoop()
       continue;
     }
 
-    HandleClient((uintptr_t)client_fd);
+    HandleClient(static_cast<uintptr_t>(client_fd));
   }
 }
 
 void HTTPServer::HandleClient(uintptr_t client_socket)
 {
-  SOCKET client_fd = (SOCKET)client_socket;
+  SOCKET client_fd = static_cast<SOCKET>(client_socket);
   std::array<char, 4096> buffer{};
-  ssize_t bytes_read = recv(client_fd, buffer.data(), (int)buffer.size() - 1, 0);
+  const ssize_t bytes_read = recv(client_fd, buffer.data(), static_cast<int>(buffer.size() - 1), 0);
 
   if (bytes_read <= 0)
   {
@@ -204,16 +306,15 @@ void HTTPServer::HandleClient(uintptr_t client_socket)
     return;
   }
 
-  auto request = ParseRequest(std::string_view(buffer.data(), bytes_read));
-
-  std::string route = request.method + " " + request.path;
+  const auto request = ParseRequest(std::string_view(buffer.data(), bytes_read));
+  const std::string route = request.method + " " + request.path;
   HTTPResponse response;
 
   if (request.method == "OPTIONS")
   {
     response.status_code = 204;
   }
-  else if (auto it = m_handlers.find(route); it != m_handlers.end())
+  else if (const auto it = m_handlers.find(route); it != m_handlers.end())
   {
     response = it->second(request);
   }
@@ -223,8 +324,8 @@ void HTTPServer::HandleClient(uintptr_t client_socket)
     response.body = "{\"error\": \"Route not found\"}";
   }
 
-  std::string response_str = FormatResponse(response);
-  send(client_fd, response_str.c_str(), (int)response_str.size(), 0);
+  const std::string response_str = FormatResponse(response);
+  send(client_fd, response_str.c_str(), static_cast<int>(response_str.size()), 0);
 
   CLOSE_SOCKET(client_fd);
 }

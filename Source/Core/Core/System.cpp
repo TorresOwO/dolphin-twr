@@ -10,6 +10,7 @@
 #include "Core/CoreTiming.h"
 #include "Core/FifoPlayer/FifoPlayer.h"
 #include "Core/FifoPlayer/FifoRecorder.h"
+#include "Core/HTTPServer/HTTPServer.h"
 #include "Core/HW/AudioInterface.h"
 #include "Core/HW/CPU.h"
 #include "Core/HW/DSP.h"
@@ -82,6 +83,7 @@ struct System::Impl
   GeometryShaderManager m_geometry_shader_manager;
   GPFifo::GPFifoManager m_gp_fifo;
   HSP::HSPManager m_hsp;
+  HTTPServer m_http_server;
   IOS::HLE::USB::InfinityBase m_infinity_base;
   IOS::HLE::USB::SkylanderPortal m_skylander_portal;
   IOS::WiiIPC m_wii_ipc;
@@ -230,6 +232,11 @@ GPFifo::GPFifoManager& System::GetGPFifo() const
 HSP::HSPManager& System::GetHSP() const
 {
   return m_impl->m_hsp;
+}
+
+HTTPServer& System::GetHTTPServer() const
+{
+  return m_impl->m_http_server;
 }
 
 Interpreter& System::GetInterpreter() const
