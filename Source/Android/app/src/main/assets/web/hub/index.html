@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dolphin Web Portal</title>
+  <link rel="stylesheet" href="/hub/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-box">
+        <svg class="dolphin-logo" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12c3-4 7-6 11-6 4 0 7 2 7 6s-3 6-7 6c-4 0-8-2-11-6z"/>
+          <path d="M12 6v12"/>
+          <circle cx="17" cy="11" r="1.5" fill="currentColor"/>
+        </svg>
+        <div>
+          <h1>Dolphin Web Portal</h1>
+          <p class="subtitle">Embedded Device & Emulation Server</p>
+        </div>
+      </div>
+      <div class="status-badge" id="serverStatus">Connecting...</div>
+    </header>
+
+    <main class="main-content">
+      <section class="section">
+        <h2>Active Modules</h2>
+        <div id="modulesList" class="modules-grid">
+          <div class="loading-state">Loading active modules...</div>
+        </div>
+      </section>
+
+      <section class="section info-section">
+        <h2>About Embedded Server</h2>
+        <p>This server enables external tools, web browsers, and local network devices to interact directly with Dolphin emulator features in real-time during gameplay.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Dolphin Emulator &bull; Android Web Portal</p>
+    </footer>
+  </div>
+
+  <script>
+    async function loadModules() {
+      const statusBadge = document.getElementById('serverStatus');
+      const listEl = document.getElementById('modulesList');
+      try {
+        const res = await fetch('/api/server/modules');
+        const data = await res.json();
+        if (data.success) {
+          statusBadge.textContent = 'Server Online';
+          statusBadge.className = 'status-badge online';
+          
+          if (!data.modules || data.modules.length === 0) {
+            listEl.innerHTML = '<div class="empty-state">No optional modules currently active. When you start an emulated game with compatible peripherals (e.g. Skylanders Portal), they will appear here automatically.</div>';
+            return;
+          }
+
+          listEl.innerHTML = data.modules.map(m => `
+            <div class="module-card">
+              <div class="module-header">
+                <h3>${m.name}</h3>
+                <span class="badge">Active</span>
+              </div>
+              <p class="module-desc">${m.description || 'Interactive web and REST API module.'}</p>
+              <div class="module-footer">
+                <span class="api-tag">${m.basePath}</span>
+                ${m.webUiPath ? `<a href="${m.webUiPath}" class="btn-primary">Open Web UI &rarr;</a>` : ''}
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        statusBadge.textContent = 'Offline / Error';
+        statusBadge.className = 'status-badge offline';
+        listEl.innerHTML = '<div class="error-state">Failed to connect to server API.</div>';
+      }
+    }
+
+    loadModules();
+    setInterval(loadModules, 3000);
+  </script>
+</body>
+</html>
