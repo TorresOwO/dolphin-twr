@@ -27,6 +27,7 @@ struct SkylanderDateTime final
 struct SkylanderData final
 {
   std::array<u8, 11> toy_code;
+  u32 experience;
   u16 money;
   u16 hero_level;
   u32 playtime;

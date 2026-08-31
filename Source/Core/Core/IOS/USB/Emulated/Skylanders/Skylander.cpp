@@ -1283,7 +1283,7 @@ bool SkylanderPortal::RemoveSkylander(u8 sky_num)
   std::lock_guard lock(sky_mutex);
   auto& skylander = skylanders[sky_num];
 
-  if (skylander.figure->FileIsOpen())
+  if (skylander.figure && skylander.figure->FileIsOpen())
   {
     skylander.figure->Save();
     skylander.figure->Close();

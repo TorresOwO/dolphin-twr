@@ -139,6 +139,8 @@ add_library(core
   Host.h
   HTTPServer/HTTPServer.cpp
   HTTPServer/HTTPServer.h
+  HTTPServer/SkylanderHandlers.cpp
+  HTTPServer/SkylanderHandlers.h
   HTTPServer/WebDashboard.h
   HotkeyManager.cpp
   HotkeyManager.h

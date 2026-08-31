@@ -202,7 +202,12 @@ FigureData SkylanderFigure::GetData() const
     // Area with highest area counter is the newest
     u16 area_offset = ((decrypted[0x89] + 1U) != decrypted[0x249]) ? 0x80 : 0x240;
 
+    const u32 experience = static_cast<u32>(decrypted[area_offset]) |
+                           (static_cast<u32>(decrypted[area_offset + 1]) << 8) |
+                           (static_cast<u32>(decrypted[area_offset + 2]) << 16);
+
     figure_data.skylander_data = {
+        .experience = experience,
         .money = Common::BitCastPtr<u16>(decrypted.data() + area_offset + 0x3),
         .hero_level = Common::BitCastPtr<u16>(decrypted.data() + area_offset + 0x5A),
         .playtime = Common::BitCastPtr<u32>(decrypted.data() + area_offset + 0x5),
@@ -261,6 +266,12 @@ void SkylanderFigure::SetData(FigureData* figure_data)
     // Only update area with lowest counter
     u16 area_offset = (decrypted[0x89] != (decrypted[0x249] + 1U)) ? 0x80 : 0x240;
     u16 other_area_offset = (area_offset == 0x80) ? 0x240 : 0x80;
+
+    decrypted[area_offset] = static_cast<u8>(figure_data->skylander_data.experience & 0xFF);
+    decrypted[area_offset + 1] =
+        static_cast<u8>((figure_data->skylander_data.experience >> 8) & 0xFF);
+    decrypted[area_offset + 2] =
+        static_cast<u8>((figure_data->skylander_data.experience >> 16) & 0xFF);
 
     memcpy(decrypted.data() + area_offset + 0x3, &figure_data->skylander_data.money, 2);
     memcpy(decrypted.data() + area_offset + 0x5A, &figure_data->skylander_data.hero_level, 2);

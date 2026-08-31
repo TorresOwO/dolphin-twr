@@ -1,12 +1,67 @@
-# Dolphin - A GameCube and Wii Emulator
+# dolphin-twr — Dolphin Fork with HTTP API for Skylanders
 
-[Homepage](https://dolphin-emu.org/) | [Project Site](https://github.com/dolphin-emu/dolphin) | [Buildbot](https://dolphin.ci/) | [Forums](https://forums.dolphin-emu.org/) | [Wiki](https://wiki.dolphin-emu.org/) | [GitHub Wiki](https://github.com/dolphin-emu/dolphin/wiki) | [Issue Tracker](https://bugs.dolphin-emu.org/projects/emulator/issues) | [Coding Style](https://github.com/dolphin-emu/dolphin/blob/master/Contributing.md) | [Transifex Page](https://app.transifex.com/dolphinemu/dolphin-emu/dashboard/) | [Analytics](https://mon.dolphin-emu.org/)
+> **Este proyecto es un fork de [Dolphin Emulator](https://github.com/dolphin-emu/dolphin).**
+> El proyecto upstream no está afiliado con este fork ni lo respalda.
 
-Dolphin is an emulator for running GameCube and Wii games on Windows,
-Linux, macOS, and recent Android devices. It's licensed under the terms
-of the GNU General Public License, version 2 or later (GPLv2+).
+[![Upstream: dolphin-emu/dolphin](https://img.shields.io/badge/upstream-dolphin--emu%2Fdolphin-blue?logo=github)](https://github.com/dolphin-emu/dolphin)
+[![License: GPL v2+](https://img.shields.io/badge/license-GPLv2%2B-green)](COPYING)
 
-Please read the [FAQ](https://dolphin-emu.org/docs/faq/) before using Dolphin.
+Dolphin es un emulador de GameCube y Wii. Este fork añade un **servidor HTTP integrado** que expone una API REST para interactuar con los Skylanders emulados en tiempo real, pensado para instalaciones tipo portal físico (arcade, exposición, etc.).
+
+---
+
+## ¿Qué añade este fork?
+
+### 🌐 Servidor HTTP integrado
+
+Al iniciar la emulación, Dolphin levanta automáticamente un servidor HTTP en el **puerto 8028** (configurable). Esto permite consultar y modificar el estado de los Skylanders desde cualquier dispositivo de la red local.
+
+#### Endpoints disponibles
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `GET` | `/` | Dashboard web interactivo |
+| `GET` | `/api/status` | Estado general del emulador |
+| `GET` | `/api/skylanders/status` | Estado de todos los portales y figuras |
+| `GET` | `/api/skylanders/{portal}/{slot}` | Datos de una figura concreta |
+| `PUT` | `/api/skylanders/{portal}/{slot}/experience` | Actualizar XP de una figura |
+
+#### Ejemplo de respuesta `/api/skylanders/status`
+
+```json
+{
+  "portals": [
+    {
+      "index": 0,
+      "active": true,
+      "slots": [
+        {
+          "slot": 0,
+          "present": true,
+          "name": "Spyro",
+          "id": 0,
+          "variant": 0,
+          "experience": 12450,
+          "level": 8
+        }
+      ]
+    }
+  ]
+}
+```
+
+### ⚡ Cierre rápido del servidor
+
+El servidor HTTP se detiene de forma inmediata al parar la emulación (sin bloqueos ni esperas).
+
+---
+
+## Plataformas
+
+Disponible para **Windows x64**, **Windows ARM64** y **Android (arm64-v8a / x86_64)**.
+
+---
+
 
 ## System Requirements
 
@@ -38,30 +93,51 @@ Dolphin can only be installed on devices that satisfy the above requirements. At
 
 ## Building
 
-You may find building instructions on the appropriate wiki page for your operating system:
-
-* [Windows](https://github.com/dolphin-emu/dolphin/wiki/Building-for-Windows)
-* [Linux](https://github.com/dolphin-emu/dolphin/wiki/Building-for-Linux)
-* [macOS](https://github.com/dolphin-emu/dolphin/wiki/Building-for-macOS)
-* [Android](#android-specific-instructions) <!-- TODO: Create a "Building for Android" wiki page and link it here -->
-* [OpenBSD](https://github.com/dolphin-emu/dolphin/wiki/Building-for-OpenBSD) (unsupported)
-
-Before building, make sure to pull all submodules:
+Clona el repositorio e inicializa los submódulos:
 
 ```sh
+git clone https://github.com/tu-usuario/dolphin-twr.git
+cd dolphin-twr
 git submodule update --init --recursive
 ```
 
-### Android-specific instructions
+### Windows x64 (Intel/AMD)
 
-These instructions assume familiarity with Android development. If you do not have an
-Android dev environment set up, see [AndroidSetup.md](AndroidSetup.md).
+Requisitos: **Visual Studio 2022/2026** con el workload "Desktop development with C++" y **CMake 3.24+**.
 
-If using Android Studio, import the Gradle project located in `./Source/Android`.
+```bat
+:: Desde una terminal Developer Command Prompt (amd64)
+call "C:\Program Files\Microsoft Visual Studio\...\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
-Android apps are compiled using a build system called Gradle. Dolphin's native component,
-however, is compiled using CMake. The Gradle script will attempt to run a CMake build
-automatically while building the Java code.
+cmake -S . -B build-x64 -G Ninja -DCMAKE_BUILD_TYPE=Release ^
+  --toolchain cmake/toolchain-windows-x64.cmake ^
+  -DQt6_DIR=Externals/Qt/Qt6.8.3/x64/lib/cmake/Qt6
+
+cmake --build build-x64 --parallel
+```
+
+El ejecutable queda en `build-x64/Binaries/Dolphin.exe`.
+
+### Windows ARM64
+
+```bat
+cmake -S . -B build-win -G "Visual Studio 18 2026" -A ARM64 ^
+  -DQt6_DIR=Externals/Qt/Qt6.8.3/ARM64/lib/cmake/Qt6
+
+cmake --build build-win --config Release --parallel
+```
+
+### Android
+
+Requisitos: **Android Studio**, **NDK r27+** y **SDK API 31+**.
+
+```sh
+cd Source/Android
+./gradlew assembleRelease
+```
+
+El APK queda en `app/build/outputs/apk/release/app-release.apk`.
+
 
 ## Uninstalling
 
