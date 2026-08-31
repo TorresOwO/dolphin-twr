@@ -241,6 +241,8 @@ extern const Info<bool> MAIN_NETWORK_SSL_DUMP_PEER_CERT;
 extern const Info<bool> MAIN_NETWORK_DUMP_BBA;
 extern const Info<bool> MAIN_NETWORK_DUMP_AS_PCAP;
 extern const Info<int> MAIN_NETWORK_TIMEOUT;
+extern const Info<bool> MAIN_HTTP_SERVER_ENABLE;
+extern const Info<int> MAIN_HTTP_SERVER_PORT;
 
 // Main.Interface
 

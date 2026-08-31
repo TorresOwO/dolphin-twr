@@ -446,6 +446,24 @@ class SettingsFragmentPresenter(
                 R.string.enable_save_states_description
             )
         )
+
+        sl.add(HeaderSetting(context, R.string.network_settings, 0))
+        sl.add(
+            SwitchSetting(
+                context,
+                BooleanSetting.MAIN_HTTP_SERVER_ENABLE,
+                R.string.http_server_enable,
+                R.string.http_server_enable_description
+            )
+        )
+        sl.add(
+            InputStringSetting(
+                context,
+                StringSetting.MAIN_HTTP_SERVER_PORT,
+                R.string.http_server_port,
+                R.string.http_server_port_description
+            )
+        )
     }
 
     private fun addInterfaceSettings(sl: ArrayList<SettingsItem>) {

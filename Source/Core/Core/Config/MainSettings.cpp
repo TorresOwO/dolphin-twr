@@ -424,6 +424,8 @@ const Info<bool> MAIN_NETWORK_DUMP_AS_PCAP{{System::Main, "Network", "DumpAsPCAP
 //  - [RFC 1122] 4.2.3.5 TCP Connection Failures (at least 3 minutes)
 //  - https://dolp.in/pr8759 hwtest (3 minutes and 10 seconds)
 const Info<int> MAIN_NETWORK_TIMEOUT{{System::Main, "Network", "NetworkTimeout"}, 190};
+const Info<bool> MAIN_HTTP_SERVER_ENABLE{{System::Main, "Network", "EnableHTTPServer"}, false};
+const Info<int> MAIN_HTTP_SERVER_PORT{{System::Main, "Network", "HTTPServerPort"}, 9090};
 
 // Main.Interface
 

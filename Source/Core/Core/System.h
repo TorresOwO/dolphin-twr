@@ -121,6 +121,8 @@ class VideoInterfaceManager;
 
 namespace Core
 {
+class HTTPServer;
+
 // Central class that encapsulates the running system.
 class System
 {
@@ -179,6 +181,7 @@ public:
   FifoRecorder& GetFifoRecorder() const;
   GeometryShaderManager& GetGeometryShaderManager() const;
   GPFifo::GPFifoManager& GetGPFifo() const;
+  HTTPServer& GetHTTPServer() const;
   HSP::HSPManager& GetHSP() const;
   Interpreter& GetInterpreter() const;
   JitInterface& GetJitInterface() const;

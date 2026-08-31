@@ -171,6 +171,12 @@ enum class BooleanSetting(
         "PermissionAsked",
         false
     ),
+    MAIN_HTTP_SERVER_ENABLE(
+        Settings.FILE_DOLPHIN,
+        Settings.SECTION_INI_NETWORK,
+        "EnableHTTPServer",
+        false
+    ),
     MAIN_RECURSIVE_ISO_PATHS(
         Settings.FILE_DOLPHIN,
         Settings.SECTION_INI_GENERAL,
@@ -1009,6 +1015,7 @@ enum class BooleanSetting(
             MAIN_EMULATE_SKYLANDER_PORTAL,
             MAIN_EMULATE_INFINITY_BASE,
             MAIN_EMULATE_WII_SPEAK,
+            MAIN_HTTP_SERVER_ENABLE,
             ACHIEVEMENTS_ENABLED,
             ACHIEVEMENTS_HARDCORE_ENABLED,
             ACHIEVEMENTS_UNOFFICIAL_ENABLED,

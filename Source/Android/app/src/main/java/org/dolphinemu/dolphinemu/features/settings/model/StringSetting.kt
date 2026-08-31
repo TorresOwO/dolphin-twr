@@ -117,7 +117,8 @@ enum class StringSetting(
     NETPLAY_ADDRESS(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETPLAY, "Address", "127.0.0.1"),
     NETPLAY_NICKNAME(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETPLAY, "Nickname", "Player"),
     NETPLAY_GAME(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETPLAY, "Game", ""),
-    NETPLAY_NETWORK_MODE(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETPLAY, "NetworkMode", "fixeddelay");
+    NETPLAY_NETWORK_MODE(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETPLAY, "NetworkMode", "fixeddelay"),
+    MAIN_HTTP_SERVER_PORT(Settings.FILE_DOLPHIN, Settings.SECTION_INI_NETWORK, "HTTPServerPort", "9090");
 
     override val isOverridden: Boolean
         get() = NativeConfig.isOverridden(file, section, key)
@@ -150,7 +151,8 @@ enum class StringSetting(
     companion object {
         private val NOT_RUNTIME_EDITABLE_ARRAY = arrayOf(
             MAIN_CUSTOM_RTC_VALUE,
-            MAIN_GFX_BACKEND
+            MAIN_GFX_BACKEND,
+            MAIN_HTTP_SERVER_PORT
         )
 
         private val NOT_RUNTIME_EDITABLE: Set<StringSetting> =

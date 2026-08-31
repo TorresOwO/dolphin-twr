@@ -49,6 +49,7 @@
 #include "Core/FifoPlayer/FifoPlayer.h"
 #include "Core/FreeLookManager.h"
 #include "Core/HLE/HLE.h"
+#include "Core/HTTPServer/HTTPServer.h"
 #include "Core/HW/CPU.h"
 #include "Core/HW/DSP.h"
 #include "Core/HW/EXI/EXI.h"
@@ -577,6 +578,13 @@ static void EmuThread(Core::System& system, std::unique_ptr<BootParameters> boot
 
   AudioCommon::InitSoundStream(system);
   Common::ScopeGuard audio_guard([&system] { AudioCommon::ShutdownSoundStream(system); });
+
+  if (Config::Get(Config::MAIN_HTTP_SERVER_ENABLE))
+  {
+    const u16 port = static_cast<u16>(Config::Get(Config::MAIN_HTTP_SERVER_PORT));
+    system.GetHTTPServer().Start(system, port);
+  }
+  Common::ScopeGuard http_server_guard([&system] { system.GetHTTPServer().Stop(); });
 
   HW::Init(system,
            NetPlay::IsNetPlayRunning() ? &(boot_session_data.GetNetplaySettings()->sram) : nullptr);

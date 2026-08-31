@@ -1062,4 +1062,11 @@ It can efficiently compress both junk data and encrypted Wii data.
     <string name="netplay_address_share">Share address</string>
     <string name="netplay_address_retry">Retry</string>
     <string name="netplay_transfer_progress">%1$s/%2$s MiB</string>
+
+    <!-- HTTP Server / Network Settings -->
+    <string name="network_settings">Network</string>
+    <string name="http_server_enable">Enable Local HTTP Server</string>
+    <string name="http_server_enable_description">Runs an embedded local HTTP server during emulation to interact with Dolphin over the local network.</string>
+    <string name="http_server_port">HTTP Server Port</string>
+    <string name="http_server_port_description">Specifies the TCP port the HTTP server listens on (default: 9090).</string>
 </resources>
